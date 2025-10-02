@@ -29,16 +29,4 @@ public class ProdutoController {
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build() );
     }
-
-    @DeleteMapping("{codigo}")
-    public ResponseEntity<Void> deletar(@PathVariable("codigo") Long codigo){
-        var produto = service.obterPorCodigo(codigo)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Produto inexistente"
-                ));
-
-        service.deletar(produto);
-        return ResponseEntity.noContent().build();
-    }
 }
