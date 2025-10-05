@@ -8,6 +8,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "pedido")
@@ -20,7 +21,7 @@ public class Pedido {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long codigo;
 
-    @Column(name = "codigo-cliente", nullable = false)
+    @Column(name = "codigo_cliente", nullable = false)
     private Long codigoCliente;
 
     @Column(name = "data_pedido", nullable = false)
@@ -44,4 +45,10 @@ public class Pedido {
 
     @Column(name = "url_nf")
     private String urlNotaFiscal;
+
+    @Transient
+    private DadosPagamento dadosPagamento;
+
+    @OneToMany(mappedBy = "pedido")
+    private List<ItemPedido> itens;
 }
