@@ -1,7 +1,12 @@
 package io.github.rafamenegheti.icompras.pedidos.service;
 
+import io.github.rafamenegheti.icompras.pedidos.client.ClientesClient;
+import io.github.rafamenegheti.icompras.pedidos.client.ProdutosClient;
 import io.github.rafamenegheti.icompras.pedidos.client.ServicoBancarioClient;
+import io.github.rafamenegheti.icompras.pedidos.client.representation.ClienteRepresentation;
+import io.github.rafamenegheti.icompras.pedidos.client.representation.ProdutoRepresentation;
 import io.github.rafamenegheti.icompras.pedidos.model.DadosPagamento;
+import io.github.rafamenegheti.icompras.pedidos.model.ItemPedido;
 import io.github.rafamenegheti.icompras.pedidos.model.Pedido;
 import io.github.rafamenegheti.icompras.pedidos.model.enums.StatusPedido;
 import io.github.rafamenegheti.icompras.pedidos.model.enums.TipoPagamento;
@@ -12,7 +17,11 @@ import io.github.rafamenegheti.icompras.pedidos.validator.PedidoValidator;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +32,8 @@ public class PedidoService {
     private final ItemPedidoRepository itemPeidoRepository;
     private final PedidoValidator validator;
     private final ServicoBancarioClient servicoBancarioClient;
+    private final ClientesClient apiClientes;
+    private final ProdutosClient apiProdutos;
 
     @Transactional
     public Pedido criarPedido(Pedido pedido){
@@ -86,5 +97,30 @@ public class PedidoService {
         pedido.setChavePagamento(novaChavePagamento);
 
         repository.save(pedido);
+    }
+
+    public Optional<Pedido> carregarDadosCompletosPedidos(Long codigo) {
+        Optional<Pedido> pedido = repository.findById(codigo);
+        pedido.ifPresent(this::carregarDadosCliente);
+        pedido.ifPresent(this::carregarItensPedido);
+        return pedido;
+    }
+
+    private void carregarDadosCliente(Pedido pedido) {
+        Long codigoCliente = pedido.getCodigoCliente();
+        var response = apiClientes.obterDados(codigoCliente);
+        pedido.setDadosCliente(response.getBody());
+    }
+
+    private void carregarItensPedido(Pedido pedido) {
+        List<ItemPedido> itens = itemPeidoRepository.findByPedido(pedido);
+        pedido.setItens(itens);
+        pedido.getItens().forEach(this::carregarDadosProduto);
+    }
+
+    private void carregarDadosProduto(ItemPedido item) {
+        Long codigoProduto = item.getCodigoProduto();
+        var response = apiProdutos.obterDados(codigoProduto);
+        item.setNome(response.getBody().nome());
     }
 }

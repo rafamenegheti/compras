@@ -1,5 +1,6 @@
 package io.github.rafamenegheti.icompras.pedidos.model;
 
+import io.github.rafamenegheti.icompras.pedidos.client.representation.ClienteRepresentation;
 import io.github.rafamenegheti.icompras.pedidos.model.enums.StatusPedido;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -51,4 +52,7 @@ public class Pedido {
 
     @OneToMany(mappedBy = "pedido")
     private List<ItemPedido> itens;
+
+    @Transient
+    private ClienteRepresentation dadosCliente;
 }

@@ -6,13 +6,12 @@ import io.github.rafamenegheti.icompras.pedidos.controller.mappers.PedidoMapper;
 import io.github.rafamenegheti.icompras.pedidos.model.ErroResposta;
 import io.github.rafamenegheti.icompras.pedidos.model.exception.ItemNaoEncontradoException;
 import io.github.rafamenegheti.icompras.pedidos.model.exception.ValidationException;
+import io.github.rafamenegheti.icompras.pedidos.publisher.DetalhePedidoMapper;
+import io.github.rafamenegheti.icompras.pedidos.publisher.representation.DetalhePedidoRepresentation;
 import io.github.rafamenegheti.icompras.pedidos.service.PedidoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("pedidos")
@@ -21,6 +20,7 @@ public class PedidoController {
 
     private final PedidoService service;
     private final PedidoMapper mapper;
+    private final DetalhePedidoMapper detalhePedidoMapper;
 
     @PostMapping
     public ResponseEntity<Object> criar(@RequestBody NovoPedidoDTO dto){
@@ -45,5 +45,16 @@ public class PedidoController {
         }
 
         return ResponseEntity.noContent().build();
+    };
+
+    @GetMapping("{codigo}")
+    public ResponseEntity<DetalhePedidoRepresentation> obterDetalhesPedidos(
+            @PathVariable("codigo") Long codigo
+    ) {
+        return service
+                .carregarDadosCompletosPedidos(codigo)
+                .map(detalhePedidoMapper::map)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     };
 }
